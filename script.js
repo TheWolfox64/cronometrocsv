@@ -3,12 +3,12 @@ let tIntervals = [];
 let running = [];
 let pausedTimes = [];
 
-// Function to start the timer
+// Función para iniciar el cronómetro
 function startTimer(element) {
-    let id = element.querySelector('.display').id.substring(7); // Get the timer ID
+    let id = element.querySelector('.display').id.substring(7); // Obtener el ID del cronómetro
     if (!running[id]) {
         if (pausedTimes[id]) {
-            // If the timer was paused, adjust the start time to maintain elapsed time
+            // Si el cronómetro estaba pausado, ajusta la hora de inicio para mantener el tiempo transcurrido
             startTimes[id] = new Date().getTime() - pausedTimes[id];
             pausedTimes[id] = null;
         } else {
@@ -19,9 +19,9 @@ function startTimer(element) {
     }
 }
 
-// Function to pause the timer
+// Función para pausar el cronómetro
 function pauseTimer(element) {
-    let id = element.querySelector('.display').id.substring(7); // Get the timer ID
+    let id = element.querySelector('.display').id.substring(7); // Obtener el ID del cronómetro
     if (running[id]) {
         clearInterval(tIntervals[id]);
         pausedTimes[id] = new Date().getTime() - startTimes[id];
@@ -29,17 +29,17 @@ function pauseTimer(element) {
     }
 }
 
-// Function to reset the timer
+// Función para reiniciar el cronómetro
 function resetTimer(element) {
-    let id = element.querySelector('.display').id.substring(7); // Get the timer ID
+    let id = element.querySelector('.display').id.substring(7); // Obtener el ID del cronómetro
     clearInterval(tIntervals[id]);
     startTimes[id] = null;
     pausedTimes[id] = null;
     running[id] = false;
-    document.getElementById('display' + id).innerHTML = "00:00:00"; // Reset the display
+    document.getElementById('display' + id).innerHTML = "00:00:00"; // Reiniciar la visualización del tiempo
 }
 
-// Function to display the current time of the timer
+// Función para mostrar el tiempo actual del cronómetro
 function getShowTime(id) {
     let startTime = startTimes[id];
     let updatedTime = new Date().getTime();
@@ -56,7 +56,7 @@ function getShowTime(id) {
     document.getElementById('display' + id).innerHTML = minutes + ':' + seconds + ':' + milliseconds;
 }
 
-// Function to add a new timer
+// Función para agregar un nuevo cronómetro
 function addTimer() {
     let numTimers = document.querySelectorAll('.row .col').length;
 
@@ -88,7 +88,7 @@ function addTimer() {
     document.querySelector('.row').appendChild(timerContainer);
 }
 
-// Function to remove the last timer added
+// Función para eliminar el último cronómetro agregado
 function removeTimer() {
     let timers = document.querySelectorAll('.row .col');
     if (timers.length > 0) {
@@ -106,7 +106,7 @@ function removeTimer() {
     }
 }
 
-// Function to start all timers
+// Función para iniciar todos los cronómetros
 function startAllTimers() {
     let timers = document.querySelectorAll('.row .col');
     timers.forEach(timer => {
@@ -114,25 +114,58 @@ function startAllTimers() {
     });
 }
 
-// Function to save timers to CSV
+// Función para guardar los cronómetros en un archivo CSV
 function saveTimersToCSV() {
     setTimeout(() => {
         let timers = document.querySelectorAll('.row .col');
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Nombre,Cronometro\n"; // Headers
+        csvContent += "Nombre,Cronometro\n"; // Encabezados
 
         timers.forEach((timer, index) => {
-            let name = document.getElementById(`timerName${index + 1}`).value;
-            let time = document.getElementById(`display${index + 1}`).textContent;
-            csvContent += `"${name}",${time}\n`;
+            let nameElement = document.getElementById(`timerName${index + 1}`);
+            let displayElement = document.getElementById(`display${index + 1}`);
+            
+            if (nameElement && displayElement) {
+                let name = nameElement.value || "Sin nombre";
+                let time = displayElement.textContent;
+
+                // Convertir el tiempo en milisegundos a formato MM:SS:MS
+                let timeComponents = time.split(':');
+                let minutes = parseInt(timeComponents[0]) || 0;
+                let seconds = parseInt(timeComponents[1]) || 0;
+                let milliseconds = parseInt(timeComponents[2]) || 0;
+
+                // Convertir milisegundos a centésimas de segundo (redondear a 2 decimales)
+                let centiseconds = Math.floor(milliseconds / 10);
+
+                // Ajustar los valores de los segundos y los minutos según las centésimas de segundo
+                seconds += Math.floor(centiseconds / 100);
+                centiseconds %= 100;
+                minutes += Math.floor(seconds / 60);
+                seconds %= 60;
+
+                // Ajustar el formato del tiempo
+                let formattedTime = `${padZero(minutes)}:${padZero(seconds)}:${padZero(centiseconds)}`;
+
+                // Agregar la fila al CSV
+                csvContent += `"${name}",${formattedTime}\n`;
+            }
         });
 
+        // Crear un enlace de descarga
         let encodedUri = encodeURI(csvContent);
         let link = document.createElement("a");
         link.setAttribute("href", encodedUri);
         link.setAttribute("download", "cronometros.csv");
+
+        // Simular clic en el enlace para iniciar la descarga
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    }, 1000); // Wait for 1 second to let the timers start
+    }, 1000); // Espera 1 segundo para permitir que los cronómetros actualicen su tiempo
+}
+
+// Función para asegurarse de que los números tengan dos dígitos
+function padZero(number) {
+    return (number < 10 ? '0' : '') + number;
 }
