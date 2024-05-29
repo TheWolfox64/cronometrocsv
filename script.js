@@ -2,6 +2,8 @@ let startTimes = [];
 let tIntervals = [];
 let running = [];
 let pausedTimes = [];
+let startTimeLogs = [];
+let endTimeLogs = [];
 
 // Función para iniciar el cronómetro
 function startTimer(element) {
@@ -13,6 +15,7 @@ function startTimer(element) {
             pausedTimes[id] = null;
         } else {
             startTimes[id] = new Date().getTime();
+            startTimeLogs[id] = new Date(); // Registrar la hora de inicio
         }
         tIntervals[id] = setInterval(() => { getShowTime(id); }, 10);
         running[id] = true;
@@ -26,6 +29,7 @@ function pauseTimer(element) {
         clearInterval(tIntervals[id]);
         pausedTimes[id] = new Date().getTime() - startTimes[id];
         running[id] = false;
+        endTimeLogs[id] = new Date(); // Registrar la hora de fin
     }
 }
 
@@ -36,6 +40,8 @@ function resetTimer(element) {
     startTimes[id] = null;
     pausedTimes[id] = null;
     running[id] = false;
+    startTimeLogs[id] = null;
+    endTimeLogs[id] = null;
     document.getElementById('display' + id).innerHTML = "00:00:00"; // Reiniciar la visualización del tiempo
 }
 
@@ -101,6 +107,8 @@ function removeTimer() {
         pausedTimes[id] = null;
         running[id] = false;
         tIntervals[id] = null;
+        startTimeLogs[id] = null;
+        endTimeLogs[id] = null;
 
         lastTimer.parentNode.removeChild(lastTimer);
     }
@@ -119,7 +127,7 @@ function saveTimersToCSV() {
     setTimeout(() => {
         let timers = document.querySelectorAll('.row .col');
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Nombre,Cronometro\n"; // Encabezados
+        csvContent += "Nombre,Cronometro,Hora de Inicio,Hora de Fin\n"; // Encabezados
 
         timers.forEach((timer, index) => {
             let nameElement = document.getElementById(`timerName${index + 1}`);
@@ -147,8 +155,12 @@ function saveTimersToCSV() {
                 // Ajustar el formato del tiempo
                 let formattedTime = `${padZero(minutes)}:${padZero(seconds)}:${padZero(centiseconds)}`;
 
+                // Obtener las horas de inicio y fin
+                let startTime = startTimeLogs[index + 1] ? startTimeLogs[index + 1].toLocaleTimeString() : "N/A";
+                let endTime = endTimeLogs[index + 1] ? endTimeLogs[index + 1].toLocaleTimeString() : "N/A";
+
                 // Agregar la fila al CSV
-                csvContent += `"${name}",${formattedTime}\n`;
+                csvContent += `"${name}",${formattedTime},${startTime},${endTime}\n`;
             }
         });
 
